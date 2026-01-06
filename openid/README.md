@@ -2,37 +2,34 @@
 ``` mermaid
 sequenceDiagram
     participant User
-    participant SP as Service Provider (Apache)
-    participant Mellon as Apache Mellon Module
-    participant IdP as Keycloak (Identity Provider)
+    participant Apache as Apache/Nginx
+    participant OAuth2 as OAuth2 Proxy
+    participant Keycloak as Identity Provider
 
-    User->>SP: Request access to protected resource
-    SP->>Mellon: Check authentication
-    Mellon-->>SP: Not authenticated, redirect to IdP
-    SP->>User: Redirect to IdP login (SAML AuthRequest)
-    User->>IdP: Access login page
-    IdP->>User: Show login form
-    User->>IdP: Submit credentials
-    IdP->>IdP: Validate credentials
-    IdP-->>User: Issue SAML Response
-    User->>SP: Return SAML Response
-    SP->>Mellon: Validate SAML Response
-    Mellon-->>SP: Authentication successful
-    SP-->>User: Access granted to resource
+    User->>Apache: Request access to protected resource
+    Apache->>OAuth2: Check authentication cookie/session
+    OAuth2-->>Apache: Not authenticated, redirect to Keycloak
+    Apache->>User: Redirect to Keycloak login page
+    User->>Keycloak: Enter credentials
+    Keycloak->>Keycloak: Validate credentials
+    Keycloak-->>User: Issue ID token + access token
+    User->>OAuth2: Return with token (OIDC callback)
+    OAuth2->>OAuth2: Validate token
+    OAuth2-->>Apache: Set authentication cookie
+    Apache-->>User: Access granted to requested resource
 ```
 
 # High-Level Configuration steps
 ``` mermaid
 flowchart TD
-    A[Start] --> B[Install Apache HTTP Server]
-    B --> C[Install Apache Mellon Module]
-    C --> D[Generate SP metadata and private keys]
-    D --> E[Configure Mellon module in Apache]
-    E --> F[Install and configure Keycloak]
-    F --> G[Create Realm, Client SAML, and Users]
-    G --> H[Upload SP metadata to Keycloak]
-    H --> I[Configure Apache virtual host with Mellon directives]
-    I --> J[Test SAML authentication flow]
-    J --> K[Done: Users can login via Keycloak using SAML]
+    A[Start] --> B[Install Keycloak]
+    B --> C[Create Realm, Clients, and Users]
+    C --> D[Install Apache or Nginx]
+    D --> E[Install OAuth2 Proxy]
+    E --> F[Configure OAuth2 Proxy with Keycloak Client]
+    F --> G[Configure Apache/Nginx to protect routes via OAuth2 Proxy]
+    G --> H[Test authentication flow]
+    H --> I[Done: Users can login via Keycloak using OpenID Connect]
+
 
 ```
