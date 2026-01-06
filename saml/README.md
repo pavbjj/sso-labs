@@ -39,6 +39,7 @@ sequenceDiagram
     User->>Apache: GET /protected/app (with cookie)
     Apache-->>User: 200 OK (protected content)
 ```
+
 # High-Level Configuration steps
 ```mermaid
 flowchart TD
@@ -52,4 +53,5 @@ flowchart TD
     H --> I[Configure Apache virtual host with Mellon directives]
     I --> J[Test SAML authentication flow]
     J --> K[Done: Users can login via Keycloak using SAML]
+
 ```
